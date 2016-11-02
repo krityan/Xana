@@ -24,11 +24,43 @@ namespace Xana
         }
     }
 
+    class Printer
+    {
+        static ConsoleColor narratorColor = ConsoleColor.DarkCyan;
+        static ConsoleColor systemColor = ConsoleColor.Gray;
+        static ConsoleColor playerColor = ConsoleColor.DarkMagenta;
+
+        public static void systemSays(String output)
+        {
+            Console.ForegroundColor = systemColor;
+            Console.WriteLine(output);
+            Console.ForegroundColor = playerColor;
+        }
+
+        public static void systemSaysInline(String output)
+        {
+            Console.ForegroundColor = systemColor;
+            Console.Write(output);
+            Console.ForegroundColor = playerColor;
+        }
+
+        public static void narratorSays(String output)
+        {
+            Console.ForegroundColor = narratorColor;
+            Console.WriteLine(output);
+            Console.ForegroundColor = playerColor;
+        }
+
+        public static void narratorSaysInline(String output)
+        {
+            Console.ForegroundColor = narratorColor;
+            Console.Write(output);
+            Console.ForegroundColor = playerColor;
+        }
+    }
+
     class Game
     {
-        ConsoleColor narratorColor = ConsoleColor.DarkCyan;
-        ConsoleColor systemColor = ConsoleColor.Gray;
-        ConsoleColor playerColor = ConsoleColor.DarkMagenta;
         Player mainChar;
         Level currentLevel;
 
@@ -39,21 +71,57 @@ namespace Xana
 
         public void loop()
         {
-            narratorSays("Welcome to level " + currentLevel.getLevelNo() + ": " + currentLevel.getName());
-            bool levelComplete = true; // false when level is finished
+            Printer.narratorSays("Welcome to level " + currentLevel.getLevelNo() + ": " + currentLevel.getName());
+            bool levelComplete = false; // false when level is finished
             while (!levelComplete)
             {
+                parseCommand();
+            }
+        }
 
+        public void parseCommand()
+        {
+            bool commandSuccess = false;
+            String[] input = takeUserInput();
+            if (currentLevel.getCommands().ContainsKey(input[0]))
+            {
+                Command com = currentLevel.getCommands()[input[0]];
+                if (com.execute(currentLevel, input))
+                {
+                    commandSuccess = true;
+                }
+
+                switch (input[0])
+                {
+                    case "move":
+                        if (commandSuccess)
+                        {
+                            Printer.systemSays("Moved to " + currentLevel.getCurrentRoom().getName() + ".");
+                        }
+                        else if (input.Length > 1)
+                        {
+                            Printer.systemSays("There is no room to the " + input[1] + ".");
+                        }
+                        else
+                        {
+                            Printer.systemSays("Please provide a direction to move.");
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                Printer.systemSays(input[0] + " is not a valid command.");
             }
         }
 
         public void introduction()
         {
-            narratorSays("Welcome to Xana.\nThis is a story of a 17 year old boy setting out on an\nadventure to find out what destiny awaitshim.\nHis name is...");
+            Printer.narratorSays("Welcome to Xana.\nThis is a story of a 17 year old boy setting out on an\nadventure to find out what destiny awaitshim.\nHis name is...");
             bool named = false;
             while (!named)
             {
-                systemSaysInline("Enter Name: ");
+                Printer.systemSaysInline("Enter Name: ");
                 String[] input = takeUserInput();
                 if (input.Length > 0 && input.Length < 2)
                 {
@@ -62,48 +130,21 @@ namespace Xana
                 }
                 else
                 {
-                    systemSays("Name must be a single word.");
+                    Printer.systemSays("Name must be a single word.");
                 }
             }
-            narratorSays(mainChar.getName() + ", his home was attacked recently by bandits, killing his monther.\nHis Father had gone off to the city with his older brother, both were\nsoldiers in the army, " + mainChar.getName() + " had been training to also join but was too young.\nNow it's time for him to make his way to the city of Xanaric to find out\nwhat future had in store for him.");
-            systemSays("Press any key to continue...");
+            Printer.narratorSays(mainChar.getName() + ", his home was attacked recently by bandits, killing his monther.\nHis father had gone off to the city with his older brother, both were\nsoldiers in the army, " + mainChar.getName() + " had been training to also join but was too young.\nNow it's time for him to make his way to the city of Xanaric to find out\nwhat future had in store for him.");
+            Printer.systemSays("Press any key to continue...");
             currentLevel = LevelSetup.levelOne();
             Console.ReadKey();
             loop();
-        }
-
-        public void systemSays(String output)
-        {
-            Console.ForegroundColor = systemColor;
-            Console.WriteLine(output);
-            Console.ForegroundColor = playerColor;
-        }
-
-        public void systemSaysInline(String output)
-        {
-            Console.ForegroundColor = systemColor;
-            Console.Write(output);
-            Console.ForegroundColor = playerColor;
-        }
-
-        public void narratorSays(String output)
-        {
-            Console.ForegroundColor = narratorColor;
-            Console.WriteLine(output);
-            Console.ForegroundColor = playerColor;
-        }
-
-        public void narratorSaysInline(String output)
-        {
-            Console.ForegroundColor = narratorColor;
-            Console.Write(output);
-            Console.ForegroundColor = playerColor;
         }
 
         public String[] takeUserInput()
         {
             // takes the user's input and stores it in a string, then converts it to an array of words
             String commandString = Console.ReadLine();
+            commandString = commandString.ToLower();
             String[] commands = commandString.Split((string[])null, StringSplitOptions.RemoveEmptyEntries);
             return commands;
         }
@@ -365,6 +406,7 @@ namespace Xana
             this.levelName = levelName;
             levelStartStory = "Not implemented";
             levelEndStory = "Not implemented.";
+            commands = new Dictionary<string, Command>();
         }
 
         public void setRooms(List<Room> rooms)
@@ -395,6 +437,11 @@ namespace Xana
             }
         }
         
+        public Dictionary<String, Command> getCommands()
+        {
+            return commands;
+        }
+
         public bool executeCommand(String commandName, String[] input)
         {
             if (commands.ContainsKey(commandName))
@@ -454,6 +501,11 @@ namespace Xana
             southRoom = null;
             eastRoom = null;
             westRoom = null;
+        }
+
+        public String getName()
+        {
+            return name;
         }
 
         public void setRooms(Room north, Room east, Room south, Room west)
@@ -523,19 +575,47 @@ namespace Xana
                 switch(input[1])
                 {
                     case "north":
-                        level.setCurrentRoom(level.getCurrentRoom().getNorth());
-                        break;
+                        if (level.getCurrentRoom().getNorth() != null)
+                        {
+                            level.setCurrentRoom(level.getCurrentRoom().getNorth());
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     case "east":
-                        level.setCurrentRoom(level.getCurrentRoom().getEast());
-                        break;
+                        if (level.getCurrentRoom().getEast() != null)
+                        {
+                            level.setCurrentRoom(level.getCurrentRoom().getEast());
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     case "south":
-                        level.setCurrentRoom(level.getCurrentRoom().getSouth());
-                        break;
+                        if (level.getCurrentRoom().getSouth() != null)
+                        {
+                            level.setCurrentRoom(level.getCurrentRoom().getSouth());
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     case "west":
-                        level.setCurrentRoom(level.getCurrentRoom().getWest());
-                        break;
+                        if (level.getCurrentRoom().getWest() != null)
+                        {
+                            level.setCurrentRoom(level.getCurrentRoom().getWest());
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                 }
-                return true;
+                return false;
             }
         }
     }
@@ -586,6 +666,11 @@ namespace Xana
             rooms[13].setRooms(null, rooms[14], rooms[12], null);
             rooms[14].setRooms(null, rooms[15], null, rooms[13]);
             rooms[15].setRooms(null, null, rooms[14], null);
+
+            // setting up the commands for the level
+            one.addCommand("move", new MoveCommand());
+
+            one.setCurrentRoom(rooms[0]);
 
             return one;
         }
