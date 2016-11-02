@@ -357,16 +357,24 @@ namespace Xana
         String levelEndStory;
         List<Room> rooms;
         Room currentRoom;
+        Dictionary<String, Command> commands;
 
         public Level(int levelNumber, String levelName)
         {
             this.levelNumber = levelNumber;
             this.levelName = levelName;
+            levelStartStory = "Not implemented";
+            levelEndStory = "Not implemented.";
         }
 
         public void setRooms(List<Room> rooms)
         {
             this.rooms = rooms;
+        }
+
+        public void setCurrentRoom(Room room)
+        {
+            currentRoom = room;
         }
 
         public bool moveNorth()
@@ -518,6 +526,20 @@ namespace Xana
         }
     }
 
+    abstract class Command
+    {
+        public abstract bool execute();
+    }
+
+    class MoveCommand : Command
+    {
+        public override bool execute()
+        {
+            return true;
+        }
+    }
+
+    // class for loading the levels used in the game
     class LevelSetup
     {
         public static Level levelOne()
