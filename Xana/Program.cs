@@ -377,57 +377,36 @@ namespace Xana
             currentRoom = room;
         }
 
-        public bool moveNorth()
+        public Room getCurrentRoom()
         {
-            if (currentRoom.getNorth() != null)
-            {
-                currentRoom = currentRoom.getNorth();
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return currentRoom;
         }
 
-        public bool moveEast()
+        public bool addCommand(String commandName, Command command)
         {
-            if (currentRoom.getEast() != null)
+            if (commands.ContainsKey(commandName))
             {
-                currentRoom = currentRoom.getEast();
+                return false;
+            }
+            else
+            {
+                commands.Add(commandName, command);
                 return true;
+            }
+        }
+        
+        public bool executeCommand(String commandName, String[] input)
+        {
+            if (commands.ContainsKey(commandName))
+            {
+                Command command = commands[commandName];
+                return command.execute(this, input);
             }
             else
             {
                 return false;
             }
-        }
-
-        public bool moveSouth()
-        {
-            if (currentRoom.getSouth() != null)
-            {
-                currentRoom = currentRoom.getSouth();
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public bool moveWest()
-        {
-            if (currentRoom.getWest() != null)
-            {
-                currentRoom = currentRoom.getWest();
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        }       
 
         public String getName()
         {
@@ -528,14 +507,36 @@ namespace Xana
 
     abstract class Command
     {
-        public abstract bool execute();
+        public abstract bool execute(Level level, String[] input);
     }
 
     class MoveCommand : Command
     {
-        public override bool execute()
+        public override bool execute(Level level, String[] input)
         {
-            return true;
+            if (input.Length < 2)
+            {
+                return false;
+            }
+            else
+            {
+                switch(input[1])
+                {
+                    case "north":
+                        level.setCurrentRoom(level.getCurrentRoom().getNorth());
+                        break;
+                    case "east":
+                        level.setCurrentRoom(level.getCurrentRoom().getEast());
+                        break;
+                    case "south":
+                        level.setCurrentRoom(level.getCurrentRoom().getSouth());
+                        break;
+                    case "west":
+                        level.setCurrentRoom(level.getCurrentRoom().getWest());
+                        break;
+                }
+                return true;
+            }
         }
     }
 
