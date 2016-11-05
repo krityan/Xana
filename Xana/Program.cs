@@ -10,6 +10,7 @@ namespace Xana
     class Program
     {
         static Game game;
+        static Interface UI;
 
         static void Main(string[] args)
         {
@@ -17,45 +18,87 @@ namespace Xana
             ConsoleColor old = Console.ForegroundColor;
 
             game = new Game();
-            game.introduction();
+            UI = new TextInterface();
+            game.introduction(UI);
 
             //setting the console color to what it was before the program was run
             Console.ForegroundColor = old;
         }
     }
 
-    class Printer
+    abstract class Interface
     {
-        static ConsoleColor narratorColor = ConsoleColor.DarkCyan;
-        static ConsoleColor systemColor = ConsoleColor.Gray;
-        static ConsoleColor playerColor = ConsoleColor.DarkMagenta;
+        public Interface(){}
 
-        public static void systemSays(String output)
+        public abstract void systemSays(String output);
+
+        public abstract void systemSaysInline(String output);
+
+        public abstract void narratorSays(String output);
+
+        public abstract void narratorSaysInline(String output);
+
+        public abstract String[] takeInput();
+
+        public abstract String[] takeCommand();
+    }
+
+    class TextInterface : Interface
+    {
+        ConsoleColor narratorColor;
+        ConsoleColor systemColor;
+        ConsoleColor playerColor;
+
+        public TextInterface()
+        {
+            narratorColor = ConsoleColor.DarkCyan;
+            systemColor = ConsoleColor.Gray;
+            playerColor = ConsoleColor.DarkMagenta;
+        }
+
+        public override void systemSays(String output)
         {
             Console.ForegroundColor = systemColor;
             Console.WriteLine(output);
             Console.ForegroundColor = playerColor;
         }
 
-        public static void systemSaysInline(String output)
+        public override void systemSaysInline(String output)
         {
             Console.ForegroundColor = systemColor;
             Console.Write(output);
             Console.ForegroundColor = playerColor;
         }
 
-        public static void narratorSays(String output)
+        public override void narratorSays(String output)
         {
             Console.ForegroundColor = narratorColor;
             Console.WriteLine(output);
             Console.ForegroundColor = playerColor;
         }
 
-        public static void narratorSaysInline(String output)
+        public override void narratorSaysInline(String output)
         {
             Console.ForegroundColor = narratorColor;
             Console.Write(output);
             Console.ForegroundColor = playerColor;
+        }
+
+        public override String[] takeInput()
+        {
+            // takes the user's input and stores it in a string, then converts it to an array of words
+            String commandString = Console.ReadLine();
+            String[] commands = commandString.Split((string[])null, StringSplitOptions.RemoveEmptyEntries);
+            return commands;
+        }
+
+        public override String[] takeCommand()
+        {
+            // takes the user's input and stores it in a string, then converts it to lower case and to an array of words
+            String commandString = Console.ReadLine();
+            commandString = commandString.ToLower();
+            String[] commands = commandString.Split((string[])null, StringSplitOptions.RemoveEmptyEntries);
+            return commands;
         }
     }
 
@@ -69,20 +112,31 @@ namespace Xana
             mainChar = new Player(10, 3, 3, 1); // player starts with 10 health, 3 str, 3 dex and 1 armour.
         }
 
-        public void loop()
+        public void loop(Interface UI)
         {
-            Printer.narratorSays("Welcome to level " + currentLevel.getLevelNo() + ": " + currentLevel.getName());
-            bool levelComplete = false; // false when level is finished
+            // this method will loop once multiple levels are added
+            UI.narratorSays("Welcome to level " + currentLevel.getLevelNo() + ": " + currentLevel.getName() + "\n");
+            UI.narratorSays(currentLevel.getStartStory());
+            UI.systemSays("You are in: " + currentLevel.getCurrentRoom().getName());
+            Room currentRoom = null;
+            bool levelComplete = false;
             while (!levelComplete)
             {
-                parseCommand();
+                if (currentRoom == null || currentRoom != currentLevel.getCurrentRoom())
+                {
+                    
+                    UI.systemSays("Available paths are:");
+                    UI.systemSays(currentLevel.getCurrentRoom().getDirections());
+                    currentRoom = currentLevel.getCurrentRoom();
+                }
+                parseCommand(UI);
             }
         }
 
-        public void parseCommand()
+        public void parseCommand(Interface UI)
         {
             bool commandSuccess = false;
-            String[] input = takeUserInput();
+            String[] input = UI.takeCommand();
             if (currentLevel.getCommands().ContainsKey(input[0]))
             {
                 Command com = currentLevel.getCommands()[input[0]];
@@ -96,33 +150,33 @@ namespace Xana
                     case "move":
                         if (commandSuccess)
                         {
-                            Printer.systemSays("Moved to " + currentLevel.getCurrentRoom().getName() + ".");
+                            UI.systemSays("\nMoved to " + currentLevel.getCurrentRoom().getName() + ".");
                         }
                         else if (input.Length > 1)
                         {
-                            Printer.systemSays("There is no room to the " + input[1] + ".");
+                            UI.systemSays("There is no room to the " + input[1] + ".");
                         }
                         else
                         {
-                            Printer.systemSays("Please provide a direction to move.");
+                            UI.systemSays("Please provide a direction to move.");
                         }
                         break;
                 }
             }
             else
             {
-                Printer.systemSays(input[0] + " is not a valid command.");
+                UI.systemSays(input[0] + " is not a valid command.");
             }
         }
 
-        public void introduction()
+        public void introduction(Interface UI)
         {
-            Printer.narratorSays("Welcome to Xana.\nThis is a story of a 17 year old boy setting out on an\nadventure to find out what destiny awaitshim.\nHis name is...");
+            UI.narratorSays("Welcome to Xana.\nThis is a story of a 17 year old boy setting out on an\nadventure to find out what destiny awaitshim.\nHis name is...");
             bool named = false;
             while (!named)
             {
-                Printer.systemSaysInline("Enter Name: ");
-                String[] input = takeUserInput();
+                UI.systemSaysInline("Enter Name: ");
+                String[] input = UI.takeInput();
                 if (input.Length > 0 && input.Length < 2)
                 {
                     Player.name = input[0];
@@ -130,23 +184,15 @@ namespace Xana
                 }
                 else
                 {
-                    Printer.systemSays("Name must be a single word.");
+                    UI.systemSays("Name must be a single word.");
                 }
             }
-            Printer.narratorSays(mainChar.getName() + ", his home was attacked recently by bandits, killing his monther.\nHis father had gone off to the city with his older brother, both were\nsoldiers in the army, " + mainChar.getName() + " had been training to also join but was too young.\nNow it's time for him to make his way to the city of Xanaric to find out\nwhat future had in store for him.");
-            Printer.systemSays("Press any key to continue...");
+            UI.narratorSays(mainChar.getName() + ", his home was attacked recently by bandits, killing his monther.\nHis father had gone off to the city with his older brother, both were\nsoldiers in the army, " + mainChar.getName() + " had been training to also join but was too young.\nNow it's time for him to make his way to the city of Xanaric to find out\nwhat future had in store for him.\n");
+            UI.systemSays("Press any key to continue...\n");
             currentLevel = LevelSetup.levelOne();
+            currentLevel.setStartStory("The Red Forest is a calm place, it's where " + mainChar.getName() + " spent his childhood, he had a small camp on the west side of the forest with some gear he was hiding.\nIt may prove useful, as he doesn't plan to return here for a while.\n");
             Console.ReadKey();
-            loop();
-        }
-
-        public String[] takeUserInput()
-        {
-            // takes the user's input and stores it in a string, then converts it to an array of words
-            String commandString = Console.ReadLine();
-            commandString = commandString.ToLower();
-            String[] commands = commandString.Split((string[])null, StringSplitOptions.RemoveEmptyEntries);
-            return commands;
+            loop(UI);
         }
     }
 
@@ -516,6 +562,56 @@ namespace Xana
             westRoom = west;
         }
 
+        public String getDirections()
+        {
+            String dir = "";
+            if (northRoom != null)
+            {
+                if (dir.Equals(""))
+                {
+                    dir = dir + "north";
+                }                
+                else
+                {
+                    dir = dir + "\nnorth";
+                }
+            }
+            if (eastRoom != null)
+            {
+                if (dir.Equals(""))
+                {
+                    dir = dir + "east";
+                }
+                else
+                {
+                    dir = dir + "\neast";
+                }
+            }
+            if (southRoom != null)
+            {
+                if (dir.Equals(""))
+                {
+                    dir = dir + "south";
+                }
+                else
+                {
+                    dir = dir + "\nsouth";
+                }
+            }
+            if (westRoom != null)
+            {
+                if (dir.Equals(""))
+                {
+                    dir = dir + "west";
+                }
+                else
+                {
+                    dir = dir + "\nwest";
+                }
+            }
+            return dir;
+        }
+
         public void setNorth(Room room)
         {
             northRoom = room;
@@ -628,7 +724,7 @@ namespace Xana
             Level one = new Level(1, "Red Forest");
 
             // setting the story for the level.
-            one.setStartStory("The Red Forest is a calm place, " );
+            
 
             // creating the list of rooms
             List<Room> rooms = new List<Room>(16);
