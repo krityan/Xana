@@ -235,8 +235,7 @@ namespace Xana
             }
             UI.narratorSays("\n" + mainChar.getName() + ", his home was attacked recently by bandits, who killed his monther.\nHis father had gone off to the city with his older brother, both were\nsoldiers in the army, " + mainChar.getName() + " had been training to also join but was too young.\nNow it's time for him to make his way to the city of Xanaric to find out\nwhat future had in store for him.\n");
             UI.systemSays("Press any key to continue...\n");
-            currentLevel = LevelSetup.levelOne(); // sets up first level while user is reading story.
-            currentLevel.setStartStory("The Red Forest is a calm place, it's where " + mainChar.getName() + " spent his childhood, he had a small camp on the west side of the forest with some gear he was hiding.\nIt may prove useful, as he doesn't plan to return here for a while.\n");
+            currentLevel = LevelSetup.levelOne(mainChar); // sets up first level while user is reading story.
             Console.ReadKey(); // waits for user input (once they finish reading)
             loop(UI);
         }
@@ -765,7 +764,7 @@ namespace Xana
     // class for loading the levels used in the game
     class LevelSetup
     {
-        public static Level levelOne()
+        public static Level levelOne(Player mainChar)
         {
             Level one = new Level(1, "Red Forest");
 
@@ -812,6 +811,10 @@ namespace Xana
             // setting up the commands for the level
             one.addCommand("move", new MoveCommand());
 
+            // setting up the story for the start of the level
+            one.setStartStory("The Red Forest is a calm place, it's where " + mainChar.getName() + " spent his childhood, he had a small camp on the west side of the forest with some gear he was hiding.\nIt may prove useful, as he doesn't plan to return here for a while.\n");
+
+            // setting the starting room
             one.setCurrentRoom(rooms[0]);
 
             return one;
