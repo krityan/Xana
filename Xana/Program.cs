@@ -9,14 +9,17 @@ namespace Xana
 {
     class Program
     {
+        // game and interface to use 
         static Game game;
         static Interface UI;
 
+        // start point
         static void Main(string[] args)
         {
             //grabbing previous console color 
             ConsoleColor old = Console.ForegroundColor;
 
+            // initialises the game and chosen interface (currently only a text based interface)
             game = new Game();
             UI = new TextInterface();
             game.introduction(UI);
@@ -26,29 +29,40 @@ namespace Xana
         }
     }
 
+    // template for interfaces to play the game via, currently only one implementation but this allows for seamless implementation of others
     abstract class Interface
     {
+        // creates the interface
         public Interface(){}
 
+        // provides system feedback on a new line
         public abstract void systemSays(String output);
 
+        // provides system feedback inline
         public abstract void systemSaysInline(String output);
 
+        // for use with story and events, text is on a new line
         public abstract void narratorSays(String output);
 
+        // for use with story and events, text is inline
         public abstract void narratorSaysInline(String output);
 
+        // takes input from the user, strings are unchanged
         public abstract String[] takeInput();
 
+        // takes commands from the user, string[] returned is the command to execute
         public abstract String[] takeCommand();
     }
 
+    // text based interface using user text to command the player in the game
     class TextInterface : Interface
     {
+        // colours for console text to distinquish between system, narrator and player input
         ConsoleColor narratorColor;
         ConsoleColor systemColor;
         ConsoleColor playerColor;
 
+        // initialises the console colours
         public TextInterface()
         {
             narratorColor = ConsoleColor.DarkCyan;
@@ -56,6 +70,7 @@ namespace Xana
             playerColor = ConsoleColor.DarkMagenta;
         }
 
+        // prints in the system colour on a new line
         public override void systemSays(String output)
         {
             Console.ForegroundColor = systemColor;
@@ -63,6 +78,7 @@ namespace Xana
             Console.ForegroundColor = playerColor;
         }
 
+        // prints in the system colour inline
         public override void systemSaysInline(String output)
         {
             Console.ForegroundColor = systemColor;
@@ -70,6 +86,7 @@ namespace Xana
             Console.ForegroundColor = playerColor;
         }
 
+        // prints in the narrator colour on a new line
         public override void narratorSays(String output)
         {
             Console.ForegroundColor = narratorColor;
@@ -77,6 +94,7 @@ namespace Xana
             Console.ForegroundColor = playerColor;
         }
 
+        // prints in the narrator colour inline
         public override void narratorSaysInline(String output)
         {
             Console.ForegroundColor = narratorColor;
@@ -84,17 +102,17 @@ namespace Xana
             Console.ForegroundColor = playerColor;
         }
 
+        // takes the user's input and stores it in a string, then converts it to an array of words
         public override String[] takeInput()
-        {
-            // takes the user's input and stores it in a string, then converts it to an array of words
+        {            
             String commandString = Console.ReadLine();
             String[] commands = commandString.Split((string[])null, StringSplitOptions.RemoveEmptyEntries);
             return commands;
         }
 
+        // takes the user's input and stores it in a string, then converts it to lower case and to an array of words
         public override String[] takeCommand()
-        {
-            // takes the user's input and stores it in a string, then converts it to lower case and to an array of words
+        {            
             String commandString = Console.ReadLine();
             commandString = commandString.ToLower();
             String[] commands = commandString.Split((string[])null, StringSplitOptions.RemoveEmptyEntries);
@@ -102,80 +120,108 @@ namespace Xana
         }
     }
 
+    // the game logic
     class Game
     {
+        // the character for the user
         Player mainChar;
+        // the level the user is currently on
         Level currentLevel;
 
+        // sets up the main character
         public Game()
         {
             mainChar = new Player(10, 3, 3, 1); // player starts with 10 health, 3 str, 3 dex and 1 armour.
         }
 
+        // the main loop for the game, finishes when game completes
         public void loop(Interface UI)
         {
             // this method will loop once multiple levels are added
+
+            // initial sequence for the level
             UI.narratorSays("Welcome to level " + currentLevel.getLevelNo() + ": " + currentLevel.getName() + "\n");
             UI.narratorSays(currentLevel.getStartStory());
             UI.systemSays("You are in: " + currentLevel.getCurrentRoom().getName());
             Room currentRoom = null;
             bool levelComplete = false;
+
+            // the loop for the level
             while (!levelComplete)
             {
+                // if the room has changed, or this is the first room of the level, prints available paths and sets currentRoom to the new room
                 if (currentRoom == null || currentRoom != currentLevel.getCurrentRoom())
-                {
-                    
+                {                    
                     UI.systemSays("Available paths are:");
                     UI.systemSays(currentLevel.getCurrentRoom().getDirections());
                     currentRoom = currentLevel.getCurrentRoom();
                 }
+                
                 parseCommand(UI);
-            }
+            } // end of level loop
         }
 
+        // takes user input and executes functions based on it.
         public void parseCommand(Interface UI)
         {
+            // bool to track if the command successfully executes
             bool commandSuccess = false;
-            String[] input = UI.takeCommand();
-            if (currentLevel.getCommands().ContainsKey(input[0]))
-            {
-                Command com = currentLevel.getCommands()[input[0]];
-                if (com.execute(currentLevel, input))
-                {
-                    commandSuccess = true;
-                }
 
-                switch (input[0])
-                {
-                    case "move":
-                        if (commandSuccess)
-                        {
-                            UI.systemSays("\nMoved to " + currentLevel.getCurrentRoom().getName() + ".");
-                        }
-                        else if (input.Length > 1)
-                        {
-                            UI.systemSays("There is no room to the " + input[1] + ".");
-                        }
-                        else
-                        {
-                            UI.systemSays("Please provide a direction to move.");
-                        }
-                        break;
-                }
-            }
-            else
+            // loops until a valid command is supplied
+            while (!commandSuccess)
             {
-                UI.systemSays(input[0] + " is not a valid command.");
+                // get user's commands
+                String[] input = UI.takeCommand();
+
+                // checks if the command is valid for current level (later levels will have new commands added)
+                if (currentLevel.getCommands().ContainsKey(input[0]))
+                {
+                    // gets the command object from the level via the user's first word
+                    Command com = currentLevel.getCommands()[input[0]];
+
+                    // if the command successfully executes, end loop
+                    if (com.execute(currentLevel, input))
+                    {
+                        commandSuccess = true;
+                    }
+
+                    // provide feedback based on the result of the command
+                    switch (input[0])
+                    {
+                        case "move": 
+                            if (commandSuccess) // 2nd word valid direction
+                            {
+                                UI.systemSays("\nMoved to " + currentLevel.getCurrentRoom().getName() + ".");
+                            }
+                            else if (input.Length > 1) // 2nd word not valid direction
+                            {
+                                UI.systemSays("There is no room to the " + input[1] + ".");
+                            }
+                            else // only 1 word provided
+                            {
+                                UI.systemSays("Please provide a direction to move.");
+                            }
+                            break;
+                    }
+                }
+                // if the command isn't valid
+                else
+                {
+                    UI.systemSays(input[0] + " is not a valid command.");
+                }
             }
         }
 
+        // the introduction sequence for the story
         public void introduction(Interface UI)
         {
-            UI.narratorSays("Welcome to Xana.\nThis is a story of a 17 year old boy setting out on an\nadventure to find out what destiny awaitshim.\nHis name is...");
+            UI.narratorSays("Welcome to Xana.\nThis is a story of a 17 year old boy setting out on an\nadventure to find out what destiny awaits him.\nHis name is...");
+
+            // allows player to set their own name for the main character
             bool named = false;
             while (!named)
             {
-                UI.systemSaysInline("Enter Name: ");
+                UI.systemSaysInline("\nEnter Name: ");
                 String[] input = UI.takeInput();
                 if (input.Length > 0 && input.Length < 2)
                 {
@@ -187,11 +233,11 @@ namespace Xana
                     UI.systemSays("Name must be a single word.");
                 }
             }
-            UI.narratorSays(mainChar.getName() + ", his home was attacked recently by bandits, killing his monther.\nHis father had gone off to the city with his older brother, both were\nsoldiers in the army, " + mainChar.getName() + " had been training to also join but was too young.\nNow it's time for him to make his way to the city of Xanaric to find out\nwhat future had in store for him.\n");
+            UI.narratorSays("\n" + mainChar.getName() + ", his home was attacked recently by bandits, who killed his monther.\nHis father had gone off to the city with his older brother, both were\nsoldiers in the army, " + mainChar.getName() + " had been training to also join but was too young.\nNow it's time for him to make his way to the city of Xanaric to find out\nwhat future had in store for him.\n");
             UI.systemSays("Press any key to continue...\n");
-            currentLevel = LevelSetup.levelOne();
+            currentLevel = LevelSetup.levelOne(); // sets up first level while user is reading story.
             currentLevel.setStartStory("The Red Forest is a calm place, it's where " + mainChar.getName() + " spent his childhood, he had a small camp on the west side of the forest with some gear he was hiding.\nIt may prove useful, as he doesn't plan to return here for a while.\n");
-            Console.ReadKey();
+            Console.ReadKey(); // waits for user input (once they finish reading)
             loop(UI);
         }
     }
