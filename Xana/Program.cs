@@ -20,9 +20,9 @@ namespace Xana
             ConsoleColor old = Console.ForegroundColor;
 
             // initialises the game and chosen interface (currently only a text based interface)
-            game = new Game();
             UI = new TextInterface();
-            game.introduction(UI);
+            game = new Game(UI);
+            game.introduction();
 
             //setting the console color to what it was before the program was run
             Console.ForegroundColor = old;
@@ -127,15 +127,18 @@ namespace Xana
         Player mainChar;
         // the level the user is currently on
         Level currentLevel;
+        // the interface for the game to interact with
+        Interface UI;
 
         // sets up the main character
-        public Game()
+        public Game(Interface UI)
         {
             mainChar = new Player(10, 3, 3, 1); // player starts with 10 health, 3 str, 3 dex and 1 armour.
+            this.UI = UI;
         }
 
         // the main loop for the game, finishes when game completes
-        public void loop(Interface UI)
+        public void loop()
         {
             // this method will loop once multiple levels are added
 
@@ -155,14 +158,24 @@ namespace Xana
                     UI.systemSays("Available paths are:");
                     UI.systemSays(currentLevel.getCurrentRoom().getDirections());
                     currentRoom = currentLevel.getCurrentRoom();
+
+                    if (currentRoom.isFinal())
+                    {
+                        levelComplete = true;
+                        break; // reached end of level, break out of level loop
+                    }
                 }
                 
-                parseCommand(UI);
+                parseCommand();
             } // end of level loop
+
+            // ending sequence for the level
+            UI.narratorSays("Reached the end of " + currentLevel.getLevelNo() + ": " + currentLevel.getName() + "\n");
+            UI.narratorSays(currentLevel.getEndStory());
         }
 
         // takes user input and executes functions based on it.
-        public void parseCommand(Interface UI)
+        public void parseCommand()
         {
             // bool to track if the command successfully executes
             bool commandSuccess = false;
@@ -174,13 +187,10 @@ namespace Xana
                 String[] input = UI.takeCommand();
 
                 // checks if the command is valid for current level (later levels will have new commands added)
-                if (currentLevel.getCommands().ContainsKey(input[0]))
+                if (input.Length > 0 && currentLevel.getCommands().ContainsKey(input[0]))
                 {
-                    // gets the command object from the level via the user's first word
-                    Command com = currentLevel.getCommands()[input[0]];
-
                     // if the command successfully executes, end loop
-                    if (com.execute(currentLevel, input))
+                    if (currentLevel.executeCommand(input))
                     {
                         commandSuccess = true;
                     }
@@ -207,13 +217,20 @@ namespace Xana
                 // if the command isn't valid
                 else
                 {
-                    UI.systemSays(input[0] + " is not a valid command.");
+                    if (input.Length < 1)
+                    {
+                        UI.systemSays("Please provide a command.");
+                    }
+                    else
+                    {
+                        UI.systemSays(input[0] + " is not a valid command.");
+                    }
                 }
             }
         }
 
         // the introduction sequence for the story
-        public void introduction(Interface UI)
+        public void introduction()
         {
             UI.narratorSays("Welcome to Xana.\nThis is a story of a 17 year old boy setting out on an\nadventure to find out what destiny awaits him.\nHis name is...");
 
@@ -237,7 +254,7 @@ namespace Xana
             UI.systemSays("Press any key to continue...\n");
             currentLevel = LevelSetup.levelOne(mainChar); // sets up first level while user is reading story.
             Console.ReadKey(); // waits for user input (once they finish reading)
-            loop(UI);
+            loop();
         }
     }
 
@@ -533,11 +550,11 @@ namespace Xana
             return commands;
         }
 
-        public bool executeCommand(String commandName, String[] input)
+        public bool executeCommand(String[] input)
         {
-            if (commands.ContainsKey(commandName))
+            if (commands.ContainsKey(input[0]))
             {
-                Command command = commands[commandName];
+                Command command = commands[input[0]];
                 return command.execute(this, input);
             }
             else
@@ -580,6 +597,7 @@ namespace Xana
     class Room
     {
         String name;
+        bool finalRoom;
         Room northRoom;
         Room eastRoom;
         Room southRoom;
@@ -588,6 +606,7 @@ namespace Xana
         public Room(String name)
         {
             this.name = name;
+            finalRoom = false;
             northRoom = null;
             southRoom = null;
             eastRoom = null;
@@ -655,6 +674,16 @@ namespace Xana
                 }
             }
             return dir;
+        }
+
+        public void setFinal()
+        {
+            finalRoom = true;
+        }
+
+        public bool isFinal()
+        {
+            return finalRoom;
         }
 
         public void setNorth(Room room)
@@ -767,10 +796,7 @@ namespace Xana
         public static Level levelOne(Player mainChar)
         {
             Level one = new Level(1, "Red Forest");
-
-            // setting the story for the level.
             
-
             // creating the list of rooms
             List<Room> rooms = new List<Room>(16);
             rooms.Add(new Room("Entrance")); // room 0
@@ -805,8 +831,11 @@ namespace Xana
             rooms[11].setRooms(null, rooms[10], null, null);
             rooms[12].setRooms(rooms[13], null, rooms[10], null);
             rooms[13].setRooms(null, rooms[14], rooms[12], null);
-            rooms[14].setRooms(null, rooms[15], null, rooms[13]);
+            rooms[14].setRooms(rooms[15], null, null, rooms[13]);
             rooms[15].setRooms(null, null, rooms[14], null);
+
+            // setting final room
+            rooms[15].setFinal();
 
             // setting up the commands for the level
             one.addCommand("move", new MoveCommand());
@@ -816,6 +845,9 @@ namespace Xana
 
             // setting the starting room
             one.setCurrentRoom(rooms[0]);
+
+            // giving level the reference to the list of rooms
+            one.setRooms(rooms);
 
             return one;
         }
