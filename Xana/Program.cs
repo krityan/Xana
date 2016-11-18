@@ -16,6 +16,15 @@ namespace Xana
         // start point
         static void Main(string[] args)
         {
+            // test code
+            Inventory inv = new Inventory();
+            inv.addItem(new Item("Sword", 1));
+            inv.addItem(new Item("Apple", 99));
+            inv.addItem(new ItemStack(new Item("Apple", 99), 40));
+            inv.addItem(new ItemStack(new Item("Apple", 99), 99));
+            Console.WriteLine(inv.allItemsString());
+            Console.ReadKey();
+
             //grabbing previous console color 
             ConsoleColor old = Console.ForegroundColor;
 
@@ -386,8 +395,193 @@ namespace Xana
         }
     }
 
+    class Inventory
+    {
+        const int STARTING_SIZE = 10;
+
+        List<ItemStack> inventory;
+        int maxSize;
+        int currentSize;
+
+        public Inventory()
+        {
+            inventory = new List<ItemStack>();
+            maxSize = STARTING_SIZE;
+            currentSize = 0;
+        }
+
+        public bool addItem(Item item)
+        {
+            return addItem(new ItemStack(item));
+        }
+
+        public bool addItem(ItemStack items)
+        {
+            ItemStack existingStack = getItemStack(items.getItem());
+            if (existingStack == null)
+            {
+                if (currentSize < maxSize)
+                {
+                    inventory.Add(new ItemStack(items.getItem(), items.getAmount()));
+                    currentSize++;
+                    items.removeFromStack(items.getAmount());
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (existingStack.addToStack(items.getAmount()))
+                {
+                    items.removeFromStack(items.getAmount());
+                    return true;
+                }
+                else
+                {
+                    if (currentSize < maxSize)
+                    {
+                        int remainingAmount = existingStack.getItem().getMaxStack() - existingStack.getAmount();
+                        existingStack.addToStack(remainingAmount);
+                        inventory.Add(new ItemStack(items.getItem(), items.getAmount() - remainingAmount));
+                        currentSize++;
+                        items.removeFromStack(items.getAmount());
+                        return true;
+                    }
+                    else
+                    {
+                        int remainingAmount = existingStack.getItem().getMaxStack() - existingStack.getAmount();
+                        existingStack.addToStack(remainingAmount);
+                        items.removeFromStack(remainingAmount);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // returns the ItemStack from inventory based on the item provided, it uses the Item's unique ID to identify the item, returns null if the item is not in the inventory
+        public ItemStack getItemStack(Item item)
+        {
+            for (int i = 0; i < inventory.Count; i++)
+            {
+                if (inventory[i].getItem().getID() == item.getID())
+                {
+                    return inventory[i];
+                }
+            }
+            return null;
+        }
+
+        public String allItemsString()
+        {
+            String result = "Inventory : " + currentSize + "/" + maxSize + "\n";
+            for (int i = 0; i < inventory.Count; i++)
+            {
+                result += inventory[i].getItem().getName() + ": " + inventory[i].getAmount() + "/" + inventory[i].getItem().getMaxStack() + "\n";
+            }
+            return result;
+        }
+    }
+
+    class ItemStack
+    {        
+        // the item stored in the stack
+        Item item;
+        int amount;
+        int max;
+
+        // constructor for adding a single item with default max size
+        public ItemStack(Item item)
+        {
+            this.item = item;
+            amount = 1;
+            max = item.getMaxStack();
+        }
+
+        // constructor for adding multiple of the item with default max size
+        public ItemStack(Item item, int amount)
+        {
+            this.item = item;
+            this.amount = amount;
+            max = item.getMaxStack();
+        }
+
+        // attempts to add items to stack, returns true if successful, false if stack would overflow
+        public bool addToStack(int addAmount)
+        {
+            if (addAmount < 0)
+            {
+                return false; //can't add negative amounts
+            }
+            if (amount + addAmount <= max)
+            {
+                amount += addAmount;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        // attempts to "take" items from the stack, returns true if successful, false is not enough in stack
+        public bool removeFromStack(int removeAmount)
+        {
+            if (removeAmount <= amount)
+            {
+                amount -= removeAmount;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        // returns true if the amount stored is 0
+        public bool isEmpty()
+        {
+            if (amount == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        // returns true if the amount stored is equal to max amount
+        public bool isFull()
+        {
+            if (amount == max)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        // returns a reference to the exact item stored in the stack, useful for non generic items such as weapons, and for using an item
+        public Item getItem()
+        {
+            return item;
+        }
+
+        // returns the current number of items in the stack
+        public int getAmount()
+        {
+            return amount;
+        }
+    }
+
     class Item
     {
+        int ID;
         String itemName;
         String itemDescription;
         int maxStack;
@@ -398,6 +592,22 @@ namespace Xana
             this.itemName = itemName;
             this.maxStack = maxStack;
             currentStack = 1;
+            setID();
+        }
+
+        private void setID()
+        {
+            ID = 0;
+        }
+
+        public int getID()
+        {
+            return ID;
+        }
+
+        public int getMaxStack()
+        {
+            return maxStack;
         }
 
         public void setDescription(String description)
