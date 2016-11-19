@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xana.Maps;
+using Xana.Commands;
 
-namespace Xana
+namespace Xana.GameData
 { 
     // class for loading the levels used in the game
     class LevelSetup

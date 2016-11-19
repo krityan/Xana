@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Xana
+namespace Xana.Interfaces
 {
     // text based interface using user text to command the player in the game
     class TextInterface : Interface

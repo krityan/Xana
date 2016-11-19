@@ -1,0 +1,6 @@
+﻿List of Item IDs:
+
+0: default;
+
+1XXX: Weapons;
+1001: Training Sword;

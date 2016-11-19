@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xana.Maps;
+using Xana.Interfaces;
+using Xana.GameData;
 
-namespace Xana
+namespace Xana.Engine
 {
     // the game logic
     class Game

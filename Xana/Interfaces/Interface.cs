@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Xana
+namespace Xana.Interfaces
 {
     // template for interfaces to play the game via, currently only one implementation but this allows for seamless implementation of others
     abstract class Interface

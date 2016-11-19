@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xana.Engine;
+using Xana.Interfaces;
+using Xana.Items;
 
 namespace Xana
 {
@@ -18,10 +21,10 @@ namespace Xana
         {
             // test code
             Inventory inv = new Inventory();
-            inv.addItem(new Item("Sword", 1));
-            inv.addItem(new Item("Apple", 99));
-            inv.addItem(new ItemStack(new Item("Apple", 99), 40));
-            inv.addItem(new ItemStack(new Item("Apple", 99), 99));
+            //inv.addItem(new Item("Apple", 99));
+            //inv.addItem(new ItemStack(new Item("Apple", 99), 40));
+            //inv.addItem(new ItemStack(new Item("Apple", 99), 99));
+            //inv.addItem(new Item("Sword", 1));
             Console.WriteLine(inv.allItemsString());
             Console.ReadKey();
 
