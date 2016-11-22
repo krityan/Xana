@@ -10,12 +10,10 @@ namespace Xana
     class Player : Unit
     {
         public static String name;
-        private int inventorySize;
         private Inventory inventory;
 
         public Player(int health, int strength, int dexteirty, int armour) : base(health, strength, dexteirty, armour)
         {
-            inventorySize = 10;
             inventory = new Inventory();
         }
 

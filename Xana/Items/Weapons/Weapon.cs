@@ -19,6 +19,7 @@ namespace Xana.Items.Weapons
 
         public Weapon() : base()
         {
+            useName = "Equip";
         }
 
         public int calculateDamage(int str, int dex)

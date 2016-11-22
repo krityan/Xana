@@ -3,64 +3,65 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xana.Maps;
+using Xana.GameEngine;
 
 namespace Xana.Commands
 {
     class MoveCommand : Command
     {
-        public override bool execute(Level level, String[] input)
+        public override String execute(Game game, String[] input)
         {
             if (input.Length < 2)
             {
-                return false;
+                return "Please provide a direction to move";
             }
             else
             {
                 switch (input[1])
                 {
                     case "north":
-                        if (level.getCurrentRoom().getNorth() != null)
+                        if (game.getCurrentLevel().getCurrentRoom().getNorth() != null)
                         {
-                            level.setCurrentRoom(level.getCurrentRoom().getNorth());
-                            return true;
+                            game.getCurrentLevel().setCurrentRoom(game.getCurrentLevel().getCurrentRoom().getNorth());
+                            return "Moved North";
                         }
                         else
                         {
-                            return false;
+                            return "There is no room to the North";
                         }
                     case "east":
-                        if (level.getCurrentRoom().getEast() != null)
+                        if (game.getCurrentLevel().getCurrentRoom().getEast() != null)
                         {
-                            level.setCurrentRoom(level.getCurrentRoom().getEast());
-                            return true;
+                            game.getCurrentLevel().setCurrentRoom(game.getCurrentLevel().getCurrentRoom().getEast());
+                            return "Moved East";
                         }
                         else
                         {
-                            return false;
+                            return "There is no room to the East";
                         }
                     case "south":
-                        if (level.getCurrentRoom().getSouth() != null)
+                        if (game.getCurrentLevel().getCurrentRoom().getSouth() != null)
                         {
-                            level.setCurrentRoom(level.getCurrentRoom().getSouth());
-                            return true;
+                            game.getCurrentLevel().setCurrentRoom(game.getCurrentLevel().getCurrentRoom().getSouth());
+                            return "Moved South";
                         }
                         else
                         {
-                            return false;
+                            return "There is no room to the South";
                         }
                     case "west":
-                        if (level.getCurrentRoom().getWest() != null)
+                        if (game.getCurrentLevel().getCurrentRoom().getWest() != null)
                         {
-                            level.setCurrentRoom(level.getCurrentRoom().getWest());
-                            return true;
+                            game.getCurrentLevel().setCurrentRoom(game.getCurrentLevel().getCurrentRoom().getWest());
+                            return "Moved West";
                         }
                         else
                         {
-                            return false;
+                            return "There is no room to the West";
                         }
+                    default:
+                        return input[1] + "is not a valid direction";
                 }
-                return false;
             }
         }
     }

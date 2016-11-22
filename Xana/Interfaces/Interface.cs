@@ -3,14 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xana.GameEngine;
 
 namespace Xana.Interfaces
 {
     // template for interfaces to play the game via, currently only one implementation but this allows for seamless implementation of others
     abstract class Interface
     {
+        protected Game game;
+
         // creates the interface
-        public Interface() { }
+        public Interface(GameEngine.Game game)
+        {
+            this.game = game;
+        }
+
+        // sets up and starts the sessions
+        public abstract void start();
+
+        // main loop for the interface
+        public abstract void loop();
+
+        // closes the session
+        public abstract void end();
 
         // provides system feedback on a new line
         public abstract void systemSays(String output);

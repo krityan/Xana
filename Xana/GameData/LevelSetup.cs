@@ -55,9 +55,6 @@ namespace Xana.GameData
             // setting final room
             rooms[15].setFinal();
 
-            // setting up the commands for the level
-            one.addCommand("move", new MoveCommand());
-
             // setting up the story for the start of the level
             one.setStartStory("The Red Forest is a calm place, it's where " + mainChar.getName() + " spent his childhood, he had a small camp on the west side of the forest with some gear he was hiding.\nIt may prove useful, as he doesn't plan to return here for a while.\n");
 

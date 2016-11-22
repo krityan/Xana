@@ -8,14 +8,19 @@ namespace Xana.Items
 {
     abstract class Item
     {
-        protected int maxStack = 99;
-        protected int ID = 0;
-        protected String name = "";
-        protected String description = "";
+        protected int maxStack;
+        protected int ID;
+        protected String name;
+        protected String description;
+        protected String useName;
 
         public Item()
         {
-
+            maxStack = 99;
+            ID = 0;
+            name = "";
+            description = "";
+            useName = "Use";
         }
 
         public int getID()
@@ -37,5 +42,12 @@ namespace Xana.Items
         {
             return name;
         }
+
+        public String getUseName()
+        {
+            return useName;
+        }
+
+        abstract public String use();
     }
 }

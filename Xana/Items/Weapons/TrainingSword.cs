@@ -21,5 +21,10 @@ namespace Xana.Items.Weapons
             strScale = LOW_SCALE;
             dexScale = NO_SCALE;
         }
+
+        public override String use()
+        {
+            return "";
+        }
     }
 }

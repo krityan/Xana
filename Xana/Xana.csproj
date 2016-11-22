@@ -45,7 +45,7 @@
   <ItemGroup>
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\MoveCommand.cs" />
-    <Compile Include="Engine\Game.cs" />
+    <Compile Include="GameEngine\Game.cs" />
     <Compile Include="GameData\LevelSetup.cs" />
     <Compile Include="Interfaces\Interface.cs" />
     <Compile Include="Interfaces\TextInterface.cs" />
